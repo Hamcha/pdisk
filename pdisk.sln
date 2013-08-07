@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pdisk", "pdisk.csproj", "{34363E03-9E1E-47FB-9CD9-A9AC72506E1B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestChunkman", "..\TestChunkman\TestChunkman.csproj", "{0AB9419B-94F8-4198-80EA-A04B1EF99CCE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{34363E03-9E1E-47FB-9CD9-A9AC72506E1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34363E03-9E1E-47FB-9CD9-A9AC72506E1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34363E03-9E1E-47FB-9CD9-A9AC72506E1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AB9419B-94F8-4198-80EA-A04B1EF99CCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AB9419B-94F8-4198-80EA-A04B1EF99CCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AB9419B-94F8-4198-80EA-A04B1EF99CCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AB9419B-94F8-4198-80EA-A04B1EF99CCE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

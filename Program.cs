@@ -25,10 +25,12 @@ namespace pdisk
 				chunkSize = 16 * 1024 * 1024, // 16 Megabytes
 				maxChunks = 16 * 1024,		  // 2^16 chunks
 				metafile = "metadata",
+				chunkpath = "data",
 				ldbsettings = new LevelDB.Options { CreateIfMissing = true },
 				ldbpath = "ldb"
 			};
 			FileSystem pfs = new FileSystem(settings);
+
 			// Dokan VFS Options
 			DokanOptions opt = new DokanOptions()
 			{

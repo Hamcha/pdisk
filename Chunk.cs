@@ -12,12 +12,13 @@ namespace pdisk
 		public ChunkMetadata metadata;
 		public Dictionary<string, PFSFile> files;
 
-		public Chunk(long chunkID, ulong _chunkSize, string _path, ChunkMetadata _metadata)
+		public Chunk(ChunkMetadata _metadata, string _path, ulong _chunkSize)
 		{
-			id = chunkID;
+			metadata = _metadata;
+			id = metadata.chunkId;
 			path = _path;
 			chunkSize = _chunkSize;
-			metadata = _metadata;
+			files = new Dictionary<string, PFSFile>();
 		}
 
 		public void load()
@@ -33,10 +34,10 @@ namespace pdisk
 				PFSFile curFile = new PFSFile
 				{
 					fileinfo = fdata.fileinfo,
-					data = bytes
+					content = bytes
 				};
 				// Create entry in the file dictionary
-				files.Add(fdata.filename, curFile);
+				files.Add(fdata.fileinfo.FileName, curFile);
 			}
 		}
 
@@ -52,14 +53,14 @@ namespace pdisk
 				// Create metadata for retrieval
 				FileMetadata tempmeta = new FileMetadata();
 				tempmeta.fileinfo = file.Value.fileinfo;
-				tempmeta.fileLenght = file.Value.data.LongLength;
-				tempmeta.filename = file.Key;
+				tempmeta.fileinfo.FileName = file.Key;
+				tempmeta.fileLenght = file.Value.content.LongLength;
 				tempmeta.startIndex = byteIndex;
 				// Put metadata into list
 				newmeta.Add(tempmeta);
 				// Copy file data into byte array
-				file.Value.data.CopyTo(bytes, byteIndex);
-				byteIndex += file.Value.data.LongLength;
+				file.Value.content.CopyTo(bytes, byteIndex);
+				byteIndex += file.Value.content.LongLength;
 			}
 			// Save all bytes to file
 			File.WriteAllBytes(path, bytes);

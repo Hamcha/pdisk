@@ -11,7 +11,6 @@ namespace pdisk
 
 	public struct FileMetadata
 	{
-		public string filename;
 		public long startIndex;
 		public long fileLenght;
 		public FileInformation fileinfo;

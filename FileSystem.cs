@@ -9,13 +9,14 @@ namespace pdisk
 	public struct PFSFile
 	{
 		public FileInformation fileinfo;
-		public byte[] data;
+		public byte[] content;
 	}
 
 	public struct PFSSettings
 	{
 		public string basepath;
 		public string metafile;
+		public string chunkpath;
 
 		public Options ldbsettings;
 		public string  ldbpath;
