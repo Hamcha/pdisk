@@ -35,10 +35,6 @@
     <StartupObject>pdisk.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DokanNet, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Users\Hamcha\Documents\dokan-net-0.6.0\DokanNet\bin\Release\DokanNet.dll</HintPath>
-    </Reference>
     <Reference Include="leveldb-sharp">
       <HintPath>..\leveldb-working\leveldb-sharp.dll</HintPath>
     </Reference>
@@ -66,6 +62,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Users\Hamcha\Documents\dokan-net-0.6.0\DokanNet\DokanNet.csproj">
+      <Project>{a09b408a-26a0-4ff8-83d5-6e1b1da5f63c}</Project>
+      <Name>DokanNet</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

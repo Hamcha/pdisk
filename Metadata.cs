@@ -11,8 +11,8 @@ namespace pdisk
 
 	public struct FileMetadata
 	{
+		public string filename;
 		public long startIndex;
-		public long fileLenght;
 		public FileInformation fileinfo;
 	}
 
@@ -25,16 +25,16 @@ namespace pdisk
 			settings = _set;
 		}
 
-		public ChunkMetadata loadChunkMetadata(int chunkId)
+		public ChunkMetadata LoadChunkMetadata(int chunkId)
 		{
-			string mdcontent = File.ReadAllText(settings.basepath + settings.metafile + "\\" + chunkId + ".mdt");
+			string mdcontent = File.ReadAllText(settings.basepath + settings.metafile + "\\" + chunkId + ".meta");
 			return JsonConvert.DeserializeObject<ChunkMetadata>(mdcontent);
 		}
 
-		public void saveChunkMetadata(ChunkMetadata metadata)
+		public void SaveChunkMetadata(ChunkMetadata metadata)
 		{
 			string content = JsonConvert.SerializeObject(metadata);
-			File.WriteAllText(settings.basepath + settings.metafile + "\\" + metadata.chunkId + ".mdt", content);
+			File.WriteAllText(settings.basepath + settings.metafile + "\\" + metadata.chunkId + ".meta", content);
 		}
 	}
 }

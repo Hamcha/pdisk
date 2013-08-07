@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Dokan;
 namespace pdisk
 {
 
@@ -12,6 +13,20 @@ namespace pdisk
 		public ChunkMetadata metadata;
 		public Dictionary<string, PFSFile> files;
 
+		/* TODO */
+		// CURRENTLY OPEN FILE COUNT
+
+		private ulong TotalFileSize
+		{
+			get 
+			{
+				ulong filesize = 0;
+				foreach (FileMetadata fdata in metadata.files)
+					filesize += (ulong)fdata.fileinfo.Length;
+				return filesize;
+			}
+		}
+
 		public Chunk(ChunkMetadata _metadata, string _path, ulong _chunkSize)
 		{
 			metadata = _metadata;
@@ -21,7 +36,7 @@ namespace pdisk
 			files = new Dictionary<string, PFSFile>();
 		}
 
-		public void load()
+		public void Load()
 		{
 			// Read all bytes from file
 			byte[] bytes = File.ReadAllBytes(path);
@@ -29,19 +44,19 @@ namespace pdisk
 			foreach (FileMetadata fdata in metadata.files)
 			{
 				// Retrieve data from chunk
-				byte[] data = new byte[fdata.fileLenght];
-				Buffer.BlockCopy(bytes, (int)fdata.startIndex, data, 0, (int)fdata.fileLenght * sizeof(byte));
+				byte[] data = new byte[fdata.fileinfo.Length];
+				Buffer.BlockCopy(bytes, (int)fdata.startIndex, data, 0, (int)fdata.fileinfo.Length);
 				PFSFile curFile = new PFSFile
 				{
 					fileinfo = fdata.fileinfo,
-					content = bytes
+					content = data
 				};
 				// Create entry in the file dictionary
-				files.Add(fdata.fileinfo.FileName, curFile);
+				files.Add(fdata.filename, curFile);
 			}
 		}
 
-		public ChunkMetadata save()
+		public ChunkMetadata Save()
 		{
 			// Create byte array to populate
 			byte[] bytes = new byte[chunkSize];
@@ -53,8 +68,8 @@ namespace pdisk
 				// Create metadata for retrieval
 				FileMetadata tempmeta = new FileMetadata();
 				tempmeta.fileinfo = file.Value.fileinfo;
-				tempmeta.fileinfo.FileName = file.Key;
-				tempmeta.fileLenght = file.Value.content.LongLength;
+				tempmeta.filename = file.Key;
+				tempmeta.fileinfo.Length = file.Value.content.LongLength;
 				tempmeta.startIndex = byteIndex;
 				// Put metadata into list
 				newmeta.Add(tempmeta);
@@ -67,6 +82,38 @@ namespace pdisk
 
 			metadata.files = newmeta.ToArray();
 			return metadata;
+		}
+
+		public bool IsFull() { return TotalFileSize >= chunkSize; }
+		public bool IsFull(ulong offset) { return TotalFileSize + offset >= chunkSize; }
+
+		public void MoveFileToChunk(string filename, ref Chunk dstChunk)
+		{
+			dstChunk.files.Add(filename, files[filename]);
+			files.Remove(filename);
+		}
+
+		public void Touch(string filename)
+		{
+			string[] sfnparts = filename.Split('\\');
+			string fname = sfnparts[sfnparts.LongLength - 1];
+			PFSFile emptyfile = new PFSFile
+			{
+				content = new byte[]{},
+				fileinfo = new FileInformation
+				{
+					Attributes = FileAttributes.Normal | FileAttributes.NotContentIndexed,
+					CreationTime = DateTime.Now,
+					FileName = fname,
+					LastAccessTime = DateTime.Now,
+					LastWriteTime = DateTime.Now,
+					Length = 0
+				}
+			};
+			if (files.ContainsKey(filename))
+				files[filename] = emptyfile;
+			else
+				files.Add(filename, emptyfile);
 		}
 	}
 }

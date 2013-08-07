@@ -21,13 +21,14 @@ namespace pdisk
 			// PFS Settings
 			PFSSettings settings = new PFSSettings()
 			{
-				basepath = "H:\\psf\\",
+				basepath = "C:\\psf\\",
 				chunkSize = 16 * 1024 * 1024, // 16 Megabytes
-				maxChunks = 16 * 1024,		  // 2^16 chunks
+				maxChunks = 4 * 1024,		  // 2^12 chunks
 				metafile = "metadata",
 				chunkpath = "data",
 				ldbsettings = new LevelDB.Options { CreateIfMissing = true },
-				ldbpath = "ldb"
+				ldbpath = "ldb",
+				mountPoint = "Q:\\"
 			};
 			FileSystem pfs = new FileSystem(settings);
 
@@ -36,7 +37,7 @@ namespace pdisk
 			{
 				DebugMode = true,
 				VolumeLabel = "Persistence",
-				MountPoint = "Q:\\",
+				MountPoint = settings.mountPoint,
 				ThreadCount = 1
 			};
 			int status = DokanNet.DokanMain(opt, pfs);
