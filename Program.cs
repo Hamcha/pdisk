@@ -26,8 +26,6 @@ namespace pdisk
 				maxChunks = 4 * 1024,		  // 2^12 chunks
 				metafile = "metadata",
 				chunkpath = "data",
-				ldbsettings = new LevelDB.Options { CreateIfMissing = true },
-				ldbpath = "ldb",
 				mountPoint = "Q:\\"
 			};
 			FileSystem pfs = new FileSystem(settings);

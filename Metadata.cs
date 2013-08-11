@@ -1,19 +1,28 @@
 ﻿using Dokan;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.IO;
+
 namespace pdisk
 {
 	public struct ChunkMetadata
 	{
 		public long chunkId;
-		public FileMetadata[] files;
+		public Dictionary<string,FileMetadata> files;
 	}
 
 	public struct FileMetadata
 	{
-		public string filename;
 		public long startIndex;
 		public FileInformation fileinfo;
+	}
+
+	public class PFSDirectory
+	{
+		public string name;
+		public FileInformation info;
+		public Dictionary<string, PFSDirectory> innerdirs;
 	}
 
 	public class Metadata
@@ -25,16 +34,28 @@ namespace pdisk
 			settings = _set;
 		}
 
-		public ChunkMetadata LoadChunkMetadata(int chunkId)
+		public ChunkMetadata LoadChunkMetadata(ulong chunkId)
 		{
-			string mdcontent = File.ReadAllText(settings.basepath + settings.metafile + "\\" + chunkId + ".meta");
+			string mdcontent = File.ReadAllText(settings.basepath + settings.metafile + "\\chunk-" + chunkId + ".meta");
 			return JsonConvert.DeserializeObject<ChunkMetadata>(mdcontent);
 		}
 
 		public void SaveChunkMetadata(ChunkMetadata metadata)
 		{
 			string content = JsonConvert.SerializeObject(metadata);
-			File.WriteAllText(settings.basepath + settings.metafile + "\\" + metadata.chunkId + ".meta", content);
+			File.WriteAllText(settings.basepath + settings.metafile + "\\chunk-" + metadata.chunkId + ".meta", content);
+		}
+
+		public Dictionary<string, PFSDirectory> LoadDirectoryMetadata()
+		{
+			string mdcontent = File.ReadAllText(settings.basepath + settings.metafile + "\\dirs.meta");
+			return JsonConvert.DeserializeObject<Dictionary<string, PFSDirectory>>(mdcontent);
+		}
+
+		public void SaveDirectoryMetadata(Dictionary<string, PFSDirectory> dirmetadata)
+		{
+			string content = JsonConvert.SerializeObject(dirmetadata);
+			File.WriteAllText(settings.basepath + settings.metafile + "\\dirs.meta", content);
 		}
 	}
 }

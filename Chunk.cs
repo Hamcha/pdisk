@@ -21,8 +21,8 @@ namespace pdisk
 			get 
 			{
 				ulong filesize = 0;
-				foreach (FileMetadata fdata in metadata.files)
-					filesize += (ulong)fdata.fileinfo.Length;
+				foreach (KeyValuePair<string,FileMetadata> fdata in metadata.files)
+					filesize += (ulong)fdata.Value.fileinfo.Length;
 				return filesize;
 			}
 		}
@@ -41,18 +41,18 @@ namespace pdisk
 			// Read all bytes from file
 			byte[] bytes = File.ReadAllBytes(path);
 			// Parse metadata
-			foreach (FileMetadata fdata in metadata.files)
+			foreach (KeyValuePair<string,FileMetadata> fdata in metadata.files)
 			{
 				// Retrieve data from chunk
-				byte[] data = new byte[fdata.fileinfo.Length];
-				Buffer.BlockCopy(bytes, (int)fdata.startIndex, data, 0, (int)fdata.fileinfo.Length);
+				byte[] data = new byte[fdata.Value.fileinfo.Length];
+				Buffer.BlockCopy(bytes, (int)fdata.Value.startIndex, data, 0, (int)fdata.Value.fileinfo.Length);
 				PFSFile curFile = new PFSFile
 				{
-					fileinfo = fdata.fileinfo,
+					fileinfo = fdata.Value.fileinfo,
 					content = data
 				};
 				// Create entry in the file dictionary
-				files.Add(fdata.filename, curFile);
+				files.Add(fdata.Key, curFile);
 			}
 		}
 
@@ -68,11 +68,10 @@ namespace pdisk
 				// Create metadata for retrieval
 				FileMetadata tempmeta = new FileMetadata();
 				tempmeta.fileinfo = file.Value.fileinfo;
-				tempmeta.filename = file.Key;
 				tempmeta.fileinfo.Length = file.Value.content.LongLength;
 				tempmeta.startIndex = byteIndex;
-				// Put metadata into list
-				newmeta.Add(tempmeta);
+				// Put metadata into struct
+				metadata.files[file.Key] = tempmeta;
 				// Copy file data into byte array
 				file.Value.content.CopyTo(bytes, byteIndex);
 				byteIndex += file.Value.content.LongLength;
@@ -80,7 +79,6 @@ namespace pdisk
 			// Save all bytes to file
 			File.WriteAllBytes(path, bytes);
 
-			metadata.files = newmeta.ToArray();
 			return metadata;
 		}
 
