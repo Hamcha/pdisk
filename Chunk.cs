@@ -14,9 +14,6 @@ namespace pdisk
 		public ulong rcount;
 		public bool InUse { get { return rcount > 0; } }
 
-		/* TODO */
-		// CURRENTLY OPEN FILE COUNT
-
 		private ulong TotalFileSize
 		{
 			get 
@@ -85,13 +82,30 @@ namespace pdisk
 
 		public void Touch(string filename)
 		{
-			string[] sfnparts = filename.Split('\\');
-			string fname = sfnparts[sfnparts.LongLength - 1];
 			byte[] emptyfile = new byte[]{};
+			FileMetadata emptymeta = new FileMetadata
+			{
+				startIndex = 0,
+				fileinfo = new FileInformation
+				{
+					Attributes = FileAttributes.Normal,
+					CreationTime = DateTime.Now,
+					FileName = FileSystem.GetFilename(filename),
+					LastAccessTime = DateTime.Now,
+					LastWriteTime = DateTime.Now,
+					Length = 0
+				}
+			};
 			if (files.ContainsKey(filename))
+			{
 				files[filename] = emptyfile;
+				FileSystem.chunkMetadata[id].files[filename] = emptymeta;
+			}
 			else
+			{
 				files.Add(filename, emptyfile);
+				FileSystem.chunkMetadata[id].files.Add(filename, emptymeta);
+			}
 		}
 	}
 }

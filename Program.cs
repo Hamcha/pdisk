@@ -1,5 +1,7 @@
 ﻿using System;
 using Dokan;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace pdisk
 {
@@ -19,7 +21,7 @@ namespace pdisk
 			ServiceBase.Run(ServicesToRun);
 			 * */
 			// PFS Settings
-			PFSSettings settings = new PFSSettings()
+			/* PFSSettings settings = new PFSSettings()
 			{
 				basepath = "C:\\psf\\",
 				chunkSize = 16 * 1024 * 1024, // 16 Megabytes
@@ -27,7 +29,9 @@ namespace pdisk
 				metafile = "metadata",
 				chunkpath = "chunks",
 				mountPoint = "Q:\\"
-			};
+			};*/
+			string settingfilecontent = File.ReadAllText("settings.conf");
+			PFSSettings settings = JsonConvert.DeserializeObject<PFSSettings>(settingfilecontent);
 			FileSystem pfs = new FileSystem(settings);
 
 			// Dokan VFS Options

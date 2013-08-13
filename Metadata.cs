@@ -35,6 +35,12 @@ namespace pdisk
 		public Dictionary<string, PFSDirectory> innerdirs;
 	}
 
+	public struct SavePeriod
+	{
+		public ulong edits;
+		public ulong seconds;
+	}
+
 	public class Metadata
 	{
 		PFSSettings settings;

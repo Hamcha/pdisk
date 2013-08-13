@@ -1,3 +1,4 @@
+
 Persistence
 ===========
 
@@ -23,3 +24,26 @@ Pdisk (short for Persistence) is being developed in C# (.net 4.0) using the [Dok
 Files are saved in two places:  
 The content is saved into chunks (.chunk) files in a binary packing fashion.  
 The file information and other metadata is stored into metadata files (.meta) using JSON as a format (and [JSON.net](http://james.newtonking.com/projects/json-net.aspx) as a library for handling them)
+
+What works now
+--------------
+
+Settings are read from a JSON "settings.conf" file
+
+You can create, edit, delete files and directories, and it *should* work fine, if you find any bugs please let me know.
+
+The chunks and their metadata are saved in a Redis-fashion using edit/intervals in which everything is saved if more than **X** edits have been done in **Y** seconds (you can set more than one interval)
+
+What doesn't work (yet)
+-----------------------
+
+Setting files permissions as well as locking/unlocking files.
+ 
+They are not priorities so I don't think I'm going to make them work any time soon
+
+Things I'm doing (a.k.a To-do list)
+----------------
+
+Compression of chunk and metadata using [Snappy](https://code.google.com/p/snappy/) ([.NET binding](http://snappy4net.codeplex.com/))
+
+Unloading of unused chunks
