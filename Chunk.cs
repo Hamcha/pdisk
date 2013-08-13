@@ -7,11 +7,12 @@ namespace pdisk
 
 	public class Chunk
 	{
-		public long id;
+		public ulong id;
 		public string path;
 		public ulong chunkSize;
-		public ChunkMetadata metadata;
-		public Dictionary<string, PFSFile> files;
+		public Dictionary<string, byte[]> files;
+		public ulong rcount;
+		public bool InUse { get { return rcount > 0; } }
 
 		/* TODO */
 		// CURRENTLY OPEN FILE COUNT
@@ -21,19 +22,18 @@ namespace pdisk
 			get 
 			{
 				ulong filesize = 0;
-				foreach (KeyValuePair<string,FileMetadata> fdata in metadata.files)
+				foreach (KeyValuePair<string,FileMetadata> fdata in FileSystem.chunkMetadata[id].files)
 					filesize += (ulong)fdata.Value.fileinfo.Length;
 				return filesize;
 			}
 		}
 
-		public Chunk(ChunkMetadata _metadata, string _path, ulong _chunkSize)
+		public Chunk(ulong _id, string _path, ulong _chunkSize)
 		{
-			metadata = _metadata;
-			id = metadata.chunkId;
+			id = _id;
 			path = _path;
 			chunkSize = _chunkSize;
-			files = new Dictionary<string, PFSFile>();
+			files = new Dictionary<string, byte[]>();
 		}
 
 		public void Load()
@@ -41,45 +41,37 @@ namespace pdisk
 			// Read all bytes from file
 			byte[] bytes = File.ReadAllBytes(path);
 			// Parse metadata
-			foreach (KeyValuePair<string,FileMetadata> fdata in metadata.files)
+			foreach (KeyValuePair<string, FileMetadata> fdata in FileSystem.chunkMetadata[id].files)
 			{
 				// Retrieve data from chunk
 				byte[] data = new byte[fdata.Value.fileinfo.Length];
 				Buffer.BlockCopy(bytes, (int)fdata.Value.startIndex, data, 0, (int)fdata.Value.fileinfo.Length);
-				PFSFile curFile = new PFSFile
-				{
-					fileinfo = fdata.Value.fileinfo,
-					content = data
-				};
 				// Create entry in the file dictionary
-				files.Add(fdata.Key, curFile);
+				files.Add(fdata.Key, data);
 			}
 		}
 
-		public ChunkMetadata Save()
+		public void Save()
 		{
 			// Create byte array to populate
 			byte[] bytes = new byte[chunkSize];
 			List<FileMetadata> newmeta = new List<FileMetadata>();
 			// Populate byte array
 			long byteIndex = 0;
-			foreach (KeyValuePair<string, PFSFile> file in files)
+			foreach (KeyValuePair<string, byte[]> file in files)
 			{
-				// Create metadata for retrieval
-				FileMetadata tempmeta = new FileMetadata();
-				tempmeta.fileinfo = file.Value.fileinfo;
-				tempmeta.fileinfo.Length = file.Value.content.LongLength;
+				// Set metadata for retrieval
+				FileMetadata tempmeta = FileSystem.chunkMetadata[id].files[file.Key];
+				tempmeta.fileinfo.Length = file.Value.LongLength;
 				tempmeta.startIndex = byteIndex;
 				// Put metadata into struct
-				metadata.files[file.Key] = tempmeta;
+				FileSystem.chunkMetadata[id].files[file.Key] = tempmeta;
 				// Copy file data into byte array
-				file.Value.content.CopyTo(bytes, byteIndex);
-				byteIndex += file.Value.content.LongLength;
+				file.Value.CopyTo(bytes, byteIndex);
+				byteIndex += file.Value.LongLength;
 			}
 			// Save all bytes to file
 			File.WriteAllBytes(path, bytes);
-
-			return metadata;
 		}
 
 		public bool IsFull() { return TotalFileSize >= chunkSize; }
@@ -95,19 +87,7 @@ namespace pdisk
 		{
 			string[] sfnparts = filename.Split('\\');
 			string fname = sfnparts[sfnparts.LongLength - 1];
-			PFSFile emptyfile = new PFSFile
-			{
-				content = new byte[]{},
-				fileinfo = new FileInformation
-				{
-					Attributes = FileAttributes.Normal | FileAttributes.NotContentIndexed,
-					CreationTime = DateTime.Now,
-					FileName = fname,
-					LastAccessTime = DateTime.Now,
-					LastWriteTime = DateTime.Now,
-					Length = 0
-				}
-			};
+			byte[] emptyfile = new byte[]{};
 			if (files.ContainsKey(filename))
 				files[filename] = emptyfile;
 			else

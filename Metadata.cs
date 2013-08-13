@@ -8,8 +8,18 @@ namespace pdisk
 {
 	public struct ChunkMetadata
 	{
-		public long chunkId;
+		public ulong chunkId;
 		public Dictionary<string,FileMetadata> files;
+		public ulong TotalLength 
+		{
+			get
+			{
+				ulong outv = 0;
+				foreach (FileMetadata fm in files.Values)
+					outv += (ulong)fm.fileinfo.Length;
+				return outv;
+			}
+		}
 	}
 
 	public struct FileMetadata

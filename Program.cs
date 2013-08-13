@@ -25,7 +25,7 @@ namespace pdisk
 				chunkSize = 16 * 1024 * 1024, // 16 Megabytes
 				maxChunks = 4 * 1024,		  // 2^12 chunks
 				metafile = "metadata",
-				chunkpath = "data",
+				chunkpath = "chunks",
 				mountPoint = "Q:\\"
 			};
 			FileSystem pfs = new FileSystem(settings);
