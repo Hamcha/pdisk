@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Dokan;
+using LZ4;
 namespace pdisk
 {
 
@@ -37,6 +38,10 @@ namespace pdisk
 		{
 			// Read all bytes from file
 			byte[] bytes = File.ReadAllBytes(path);
+			if (FileSystem.settings.useLZ4)
+			{
+				bytes = LZ4Codec.Decode(bytes, 0, bytes.Length, (int)chunkSize);
+			}
 			// Parse metadata
 			foreach (KeyValuePair<string, FileMetadata> fdata in FileSystem.chunkMetadata[id].files)
 			{
@@ -67,6 +72,10 @@ namespace pdisk
 				file.Value.CopyTo(bytes, byteIndex);
 				byteIndex += file.Value.LongLength;
 			}
+			if (FileSystem.settings.useLZ4)
+			{
+				bytes = LZ4Codec.EncodeHC(bytes, 0, bytes.Length);
+			}
 			// Save all bytes to file
 			File.WriteAllBytes(path, bytes);
 		}
@@ -89,13 +98,11 @@ namespace pdisk
 				fileinfo = new FileInformation
 				{
 					Attributes = FileAttributes.Normal,
-					CreationTime = DateTime.Now,
 					FileName = FileSystem.GetFilename(filename),
-					LastAccessTime = DateTime.Now,
-					LastWriteTime = DateTime.Now,
 					Length = 0
 				}
 			};
+			emptymeta.fileinfo.LastAccessTime = emptymeta.fileinfo.LastWriteTime = emptymeta.fileinfo.CreationTime = DateTime.Now;
 			if (files.ContainsKey(filename))
 			{
 				files[filename] = emptyfile;

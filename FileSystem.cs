@@ -17,11 +17,12 @@ namespace pdisk
 
 		public string mountPoint;
 		public SavePeriod[] saves;
+		public bool useLZ4;
 	}
 
 	public sealed class FileSystem : DokanOperations
 	{
-		private PFSSettings settings;
+		public static PFSSettings settings;
 		public static Dictionary<ulong, Chunk> loadedChunks;
 		public static Dictionary<ulong, ChunkMetadata> chunkMetadata;
 		public static Dictionary<string, ulong> files;
@@ -544,9 +545,9 @@ namespace pdisk
 		{
 			if (!files.ContainsKey(filename)) return -1;
 			ulong id = files[filename];
-			chunkMetadata[id].files[filename].fileinfo.CreationTime = ctime;
-			chunkMetadata[id].files[filename].fileinfo.LastAccessTime = atime;
-			chunkMetadata[id].files[filename].fileinfo.LastWriteTime = mtime;
+			if (ctime > DateTime.MinValue) chunkMetadata[id].files[filename].fileinfo.CreationTime = ctime;
+			if (atime > DateTime.MinValue) chunkMetadata[id].files[filename].fileinfo.LastAccessTime = atime;
+			if (mtime > DateTime.MinValue) chunkMetadata[id].files[filename].fileinfo.LastWriteTime = mtime;
 			// Check if we should save
 			EditSave();
 			return 0;

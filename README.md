@@ -1,4 +1,3 @@
-
 Persistence
 ===========
 
@@ -25,14 +24,11 @@ Files are saved in two places:
 The content is saved into chunks (.chunk) files in a binary packing fashion.  
 The file information and other metadata is stored into metadata files (.meta) using JSON as a format (and [JSON.net](http://james.newtonking.com/projects/json-net.aspx) as a library for handling them)
 
-What works now
---------------
+The chunks and their metadata are saved in a Redis-fashion using edit/intervals in which everything is saved if more than **X** edits have been done in **Y** seconds (you can set more than one interval)
 
 Settings are read from a JSON "settings.conf" file
 
-You can create, edit, delete files and directories, and it *should* work fine, if you find any bugs please let me know.
-
-The chunks and their metadata are saved in a Redis-fashion using edit/intervals in which everything is saved if more than **X** edits have been done in **Y** seconds (you can set more than one interval)
+Compression of chunk and metadata using [LZ4 for .NET](http://lz4net.codeplex.com/)
 
 What doesn't work (yet)
 -----------------------
@@ -43,7 +39,5 @@ They are not priorities so I don't think I'm going to make them work any time so
 
 Things I'm doing (a.k.a To-do list)
 ----------------
-
-Compression of chunk and metadata using [Snappy](https://code.google.com/p/snappy/) ([.NET binding](http://snappy4net.codeplex.com/))
 
 Unloading of unused chunks
