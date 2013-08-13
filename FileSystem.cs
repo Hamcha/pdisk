@@ -26,6 +26,8 @@ namespace pdisk
 		public static Dictionary<ulong, ChunkMetadata> chunkMetadata;
 		public static Dictionary<string, ulong> files;
 		public static Dictionary<string, PFSDirectory> directories;
+		// Windows 8 fix
+		public static HashSet<string> pendingDelete;
 
 		private FileInformation rootData;
 		private Metadata metadata;
@@ -36,6 +38,7 @@ namespace pdisk
 		{
 			settings = _settings;
 			loadedChunks = new Dictionary<ulong, Chunk>();
+			pendingDelete = new HashSet<string>();
 			metadata = new Metadata(settings);
 			LoadMetadata(Directory.GetFiles(settings.basepath + settings.metafile + "\\"));
 			lastSaveTime = DateTime.Now;
@@ -69,9 +72,9 @@ namespace pdisk
 			rootData = new FileInformation
 			{
 				Attributes = FileAttributes.Directory | FileAttributes.Hidden | FileAttributes.System,
-				CreationTime = DateTime.Today,
-				LastAccessTime = DateTime.Today,
-				LastWriteTime = DateTime.Today,
+				CreationTime = DateTime.Now,
+				LastAccessTime = DateTime.Now,
+				LastWriteTime = DateTime.Now,
 				FileName = settings.mountPoint,
 				Length = 0
 			};
@@ -158,7 +161,7 @@ namespace pdisk
 				if (DateTime.Now - lastSaveTime > TimeSpan.FromSeconds(s.seconds) 
 					&& editCount > s.edits)
 				{
-					Console.WriteLine(editCount + "edits in "+ (DateTime.Now - lastSaveTime).TotalSeconds+" seconds..");
+					Console.WriteLine(editCount + " actions in "+ (DateTime.Now - lastSaveTime).TotalSeconds+" seconds..");
 					shouldSave = true;
 					break;
 				}
@@ -176,6 +179,9 @@ namespace pdisk
 				Console.WriteLine(" - Chunk #" + m.chunkId + " metadata");
 				metadata.SaveChunkMetadata(m);
 			}
+			metadata.SaveDirectoryMetadata(directories);
+			lastSaveTime = DateTime.Now;
+			editCount = 0;
 		}
 
 		public int Cleanup(string filename, DokanFileInfo info)
@@ -188,6 +194,11 @@ namespace pdisk
 			if (files.ContainsKey(filename))
 			{
 				loadedChunks[files[filename]].rcount -= 1;
+				if (pendingDelete.Contains(filename))
+				{
+					DeleteFile(filename, info);
+					pendingDelete.Remove(filename);
+				}
 			}
 			return 0;
 		}
@@ -252,8 +263,9 @@ namespace pdisk
 					goto case FileMode.Create;
 				case FileMode.Create:
 					ulong chunkId = GetFreeChunk(0);
+					GetChunk(chunkId);
 					loadedChunks[chunkId].Touch(filename);
-					files[filename] = chunkId;
+					files.Add(filename,chunkId);
 					loadedChunks[chunkId].rcount += 1;
 					// Check if we should save
 					EditSave();
@@ -276,6 +288,13 @@ namespace pdisk
 				ulong chunkId = files[filename];
 				GetChunk(chunkId);
 				loadedChunks[chunkId].rcount += 1;
+				// Update access time
+				chunkMetadata[files[filename]].files[filename].fileinfo.LastAccessTime = DateTime.Now;
+				// Check if we should save
+				EditSave();
+				// Windows 8 delete
+				if ((options & FileOptions.DeleteOnClose) != 0 || share == FileShare.Delete)
+					pendingDelete.Add(filename);
 			}
 			return 0;
 		}
@@ -295,9 +314,7 @@ namespace pdisk
 				while (todel.Count > 0)
 				{
 					string curItem = todel.Dequeue();
-					files.Remove(curItem);
-					chunkMetadata[cmd.Key].files.Remove(curItem);
-					GetChunk(cmd.Key).files.Remove(filename);
+					DeleteFile(curItem, info);
 				}
 			}
 			directories.Remove(filename);
@@ -312,7 +329,8 @@ namespace pdisk
 			ulong id = files[filename];
 			files.Remove(filename);
 			chunkMetadata[id].files.Remove(filename);
-			GetChunk(id).files.Remove(filename);
+			GetChunk(id);
+			loadedChunks[id].files.Remove(filename);
 			// Check if we should save
 			EditSave();
 			return 0;
@@ -489,12 +507,9 @@ namespace pdisk
 		{
 			if (!files.ContainsKey(filename)) return -1;
 			Chunk c = GetChunk(files[filename]);
-			Buffer.BlockCopy(c.files[filename], (int)offset, buffer, 0, c.files[filename].Length - (int)offset);
-			readBytes = (uint)c.files[filename].Length;
-			// Update access time
-			chunkMetadata[files[filename]].files[filename].fileinfo.LastAccessTime = DateTime.Now;
-			// Check if we should save
-			EditSave();
+			int buflen = buffer.Length > c.files[filename].Length - (int)offset ? c.files[filename].Length - (int)offset : buffer.Length;
+			Buffer.BlockCopy(c.files[filename], (int)offset, buffer, 0, buflen>0?buflen:0);
+			readBytes = (uint)(buflen > 0 ? buflen : 0);
 			return 0;
 		}
 
@@ -508,6 +523,8 @@ namespace pdisk
 			if (!files.ContainsKey(filename)) return -1;
 			ulong id = files[filename];
 			chunkMetadata[id].files[filename].fileinfo.Length = length;
+			// Update edit time
+			chunkMetadata[files[filename]].files[filename].fileinfo.LastWriteTime = DateTime.Now;
 			// Check if we should save
 			EditSave();
 			return 0;
@@ -558,10 +575,6 @@ namespace pdisk
 			}
 			Buffer.BlockCopy(buffer, 0, c.files[filename], (int)offset, buffer.Length);
 			writtenBytes = (uint)buffer.Length;
-			// Update edit time
-			chunkMetadata[files[filename]].files[filename].fileinfo.LastWriteTime = DateTime.Now;
-			// Check if we should save
-			EditSave();
 			return 0;
 		}
 	}
